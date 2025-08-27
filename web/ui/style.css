@@ -1,0 +1,23 @@
+html, body { margin:0; padding:0; background:#0b0b0b; color:#eee; font-family:ui-sans-serif, system-ui; user-select:none; }
+#app{ position:absolute; inset:0; display:flex; flex-direction:column; gap:12px; padding:16px; }
+.title{ font-size:18px; font-weight:700; opacity:.9; }
+.panels{ display:grid; grid-template-columns: 1fr 1fr 300px; gap:16px; height:calc(100vh - 96px); }
+.panel{ background:#0f0f0f; border:1px solid #1f1f1f; border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px; }
+.panel h3{ margin:0; font-size:14px; opacity:.8; }
+.grid{ position:relative; --cell:34px; width:fit-content; background:repeating-linear-gradient(0deg, #131313 0, #131313 1px, transparent 1px, transparent calc(var(--cell))), repeating-linear-gradient(90deg, #131313 0, #131313 1px, transparent 1px, transparent calc(var(--cell))); outline:1px solid #222; }
+.grid-inner{ position:relative; width:calc(var(--w) * var(--cell)); height:calc(var(--h) * var(--cell)); }
+.item{ position:absolute; border:1px solid #333; border-radius:8px; background:linear-gradient(180deg, #191919, #121212); box-shadow:0 2px 8px rgba(0,0,0,.4); display:flex; align-items:flex-end; padding:4px; }
+.item .label{ font-size:11px; color:#ddd; text-shadow:0 1px 0 #000; opacity:.9; }
+.item.dragging{ opacity:.6; }
+.ghost{ position:fixed; pointer-events:none; border:1px dashed #888; border-radius:8px; background:rgba(255,255,255,.05); z-index:9999; }
+.highlight{ position:absolute; background:rgba(0,255,120,.18); outline:1px solid rgba(0,255,120,.5); pointer-events:none; }
+.highlight.bad{ background:rgba(255,60,60,.18); outline:1px solid rgba(255,60,60,.6); }
+.equip-list{ display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; }
+.equip-slot{ position:relative; background:#111; border:1px dashed #2b2b2b; border-radius:8px; padding:6px; min-height:64px; display:flex; align-items:center; justify-content:center; }
+.equip-slot .slot-title{ position:absolute; top:6px; left:8px; font-size:10px; opacity:.6; }
+.equip-slot .slot-item{ font-size:12px; padding:6px 8px; background:#171717; border:1px solid #333; border-radius:8px; }
+.toolbar{ display:flex; gap:8px; align-items:center; }
+button{ background:#262626; color:#eee; border:1px solid #3a3a3a; padding:8px 10px; border-radius:8px; cursor:pointer; font-size:12px; }
+button:hover{ filter:brightness(1.15); }
+.hint{ font-size:12px; opacity:.7; }
+footer{ display:flex; justify-content:space-between; align-items:center; gap:8px; }

@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lootify</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div id="app">
+    <div class="title">Lootify • Inventory</div>
+    <div class="toolbar">
+      <div id="playerName" class="hint">Jogador: -</div>
+      <div class="hint">Dica: segure e arraste • R para rotacionar • clique direito para dividir</div>
+      <button id="closeBtn">Fechar</button>
+    </div>
+    <div class="panels">
+      <div class="panel">
+        <h3>Player</h3>
+        <div class="grid"><div id="grid-player" class="grid-inner"></div></div>
+        <div id="player-containers"></div>
+      </div>
+      <div class="panel">
+        <h3>Stash</h3>
+        <div class="grid"><div id="grid-stash" class="grid-inner"></div></div>
+      </div>
+      <div class="panel">
+        <h3>Equipamentos</h3>
+        <div id="equip" class="equip-list"></div>
+      </div>
+    </div>
+    <footer>
+      <div class="hint" id="status">pronto</div>
+      <div class="hint">Lootify</div>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
