@@ -190,6 +190,7 @@ lib.callback.register('lootify:unequip', function(src, data)
     return { ok=true }
 end)
 
+
 lib.callback.register('lootify:open', function(src)
     local p = Players.loadAll(src)
     return Players.snapshot(src)
