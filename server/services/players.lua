@@ -81,7 +81,6 @@ function Players.snapshot(src)
                 id = v.row.id,
                 slot = k:sub(11),
                 grids = (v.meta and v.meta.grids) or {},
-                layout = (v.meta and v.meta.layout) or nil,
                 items = v.items
             }
 

@@ -11,20 +11,10 @@ Items["bag_ranger32"] = {
   weight = 4.0,
   category = "backpack",
   grids = {
-    { key = "bp_main", w = 4, h = 4 },
-    { key = "bp_p1",  w = 2, h = 2 },
+    { key = "bp_main", w = 4, h = 4 }, -- compartimento principal 4x4
+    { key = "bp_p1",  w = 2, h = 2 },  -- bolsos 2x2
     { key = "bp_p2",  w = 2, h = 2 },
     { key = "bp_p3",  w = 2, h = 2 },
     { key = "bp_p4",  w = 2, h = 2 },
   },
-  layout = {
-    cols = 2, rows = 3,
-    cells = {
-      { key = "bp_main", col = 1, row = 1, colSpan = 2 },
-      { key = "bp_p1",   col = 1, row = 2 },
-      { key = "bp_p2",   col = 2, row = 2 },
-      { key = "bp_p3",   col = 1, row = 3 },
-      { key = "bp_p4",   col = 2, row = 3 },
-    }
-  }
 }

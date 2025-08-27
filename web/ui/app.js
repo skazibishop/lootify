@@ -30,6 +30,8 @@ function render(data) {
   renderEquip('#equip', data.equip);
 }
 
+
+
 function renderGrid(selector, inv, gridKey) {
   const el = $(selector);
   if (!el) { console.warn('renderGrid: missing element', selector); return; }
@@ -96,12 +98,51 @@ function renderGrid(selector, inv, gridKey) {
   el.dataset.gridKey = gridKey;
 }
 
-function renderContainers(selector, containers) {
+function computeAutoLayout(grids) {
+  const gs = Array.isArray(grids) ? [...grids] : [];
+  if (gs.length === 0) return { cols: 1, rows: 1, cells: [] };
+
+  // 1) escolhe "principal": bp_main > main > maior área
+  let mainIdx = gs.findIndex(g => g.key === 'bp_main' || g.key === 'main');
+  if (mainIdx === -1) {
+    let max = -1; mainIdx = 0;
+    gs.forEach((g, i) => { const a = (g.w||0) * (g.h||0); if (a > max) { max = a; mainIdx = i; } });
+  }
+  const main = gs.splice(mainIdx, 1)[0];
+
+  // 2) ordem estável pros bolsos: p1..p9, depois demais por nome
+  const numFirst = gs.filter(g => /^.+_p(\d+)$/i.test(g.key))
+    .sort((a, b) => {
+      const na = parseInt(a.key.match(/_p(\d+)/i)[1], 10);
+      const nb = parseInt(b.key.match(/_p(\d+)/i)[1], 10);
+      return na - nb;
+    });
+  const others = gs.filter(g => !/^.+_p(\d+)$/i.test(g.key))
+    .sort((a, b) => a.key.localeCompare(b.key, 'en', { numeric: true, sensitivity: 'base' }));
+
+  const rest = [...numFirst, ...others];
+
+  // 3) distribui em 2 colunas: main ocupa 2 cols na primeira linha
+  const cols = 2;
+  const cells = [{ key: main.key, col: 1, row: 1, colSpan: 2 }];
+
+  let row = 2, col = 1;
+  for (const g of rest) {
+    cells.push({ key: g.key, col, row });
+    col = (col === 1) ? 2 : 1;
+    if (col === 1) row++;
+  }
+  const rows = Math.max(1, 1 + Math.ceil(rest.length / 2));
+  return { cols, rows, cells };
+}
+
+
+function renderContainers(selector, containers){
   const wrap = document.querySelector(selector);
-  if (!wrap) return;
+  if(!wrap) return;
   wrap.innerHTML = '';
 
-  (containers || []).forEach(cont => {
+  (containers||[]).forEach(cont => {
     const box = document.createElement('div');
     box.className = 'panel';
     box.style.background = 'transparent';
@@ -111,28 +152,32 @@ function renderContainers(selector, containers) {
     title.textContent = `Container: ${cont.slot}`;
     box.appendChild(title);
 
+    const layout = computeAutoLayout(cont.grids || []); // <-- sempre calculado
     const gridsWrap = document.createElement('div');
-    gridsWrap.style.display = 'grid';
-    gridsWrap.style.gridTemplateColumns = 'repeat(2, max-content)';
-    gridsWrap.style.gap = '10px';
+    gridsWrap.className = 'container-layout';
+    gridsWrap.style.gridTemplateColumns = `repeat(${layout.cols}, max-content)`;
+    gridsWrap.style.gridTemplateRows = `repeat(${layout.rows}, max-content)`;
 
-    // Mount BEFORE rendering so the DOM exists
-    box.appendChild(gridsWrap);
-    wrap.appendChild(box);
-
-    (cont.grids || []).forEach(g => {
+    for(const cell of layout.cells){
       const holder = document.createElement('div');
       holder.className = 'grid';
+      holder.style.gridColumn = `${cell.col} / span ${cell.colSpan||1}`;
+      holder.style.gridRow    = `${cell.row} / span ${cell.rowSpan||1}`;
+
       const inner = document.createElement('div');
       inner.className = 'grid-inner';
-      inner.id = `grid-${cont.id}-${g.key}`;
+      inner.id = `grid-${cont.id}-${cell.key}`;
       holder.appendChild(inner);
       gridsWrap.appendChild(holder);
-      // now that inner is in DOM, we can render safely
-      renderGrid(`#${inner.id}`, cont, g.key);
-    });
+
+      renderGrid(`#${inner.id}`, cont, cell.key);
+    }
+
+    box.appendChild(gridsWrap);
+    wrap.appendChild(box);
   });
 }
+
 
 function renderEquip(selector, equip) {
   const list = $(selector);
