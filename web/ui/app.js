@@ -102,37 +102,32 @@ function computeAutoLayout(grids) {
   const gs = Array.isArray(grids) ? [...grids] : [];
   if (gs.length === 0) return { cols: 1, rows: 1, cells: [] };
 
-  // 1) escolhe "principal": bp_main > main > maior área
+  // 1) escolhe o "principal": bp_main > main > maior área
   let mainIdx = gs.findIndex(g => g.key === 'bp_main' || g.key === 'main');
   if (mainIdx === -1) {
     let max = -1; mainIdx = 0;
-    gs.forEach((g, i) => { const a = (g.w||0) * (g.h||0); if (a > max) { max = a; mainIdx = i; } });
+    gs.forEach((g, i) => { const a = (g.w||0)*(g.h||0); if (a > max) { max = a; mainIdx = i; } });
   }
   const main = gs.splice(mainIdx, 1)[0];
 
-  // 2) ordem estável pros bolsos: p1..p9, depois demais por nome
-  const numFirst = gs.filter(g => /^.+_p(\d+)$/i.test(g.key))
-    .sort((a, b) => {
-      const na = parseInt(a.key.match(/_p(\d+)/i)[1], 10);
-      const nb = parseInt(b.key.match(/_p(\d+)/i)[1], 10);
-      return na - nb;
-    });
-  const others = gs.filter(g => !/^.+_p(\d+)$/i.test(g.key))
-    .sort((a, b) => a.key.localeCompare(b.key, 'en', { numeric: true, sensitivity: 'base' }));
+  // 2) ordena bolsos p1..pN primeiro, depois os demais por nome
+  const numFirst = gs.filter(g => /_p(\d+)$/i.test(g.key))
+    .sort((a,b)=>parseInt(a.key.match(/_p(\d+)$/i)[1],10)-parseInt(b.key.match(/_p(\d+)$/i)[1],10));
+  const others = gs.filter(g => !/_p(\d+)$/i.test(g.key))
+    .sort((a,b)=>a.key.localeCompare(b.key, 'en', {numeric:true, sensitivity:'base'}));
 
   const rest = [...numFirst, ...others];
 
-  // 3) distribui em 2 colunas: main ocupa 2 cols na primeira linha
+  // 3) grade de 2 colunas: main ocupa 2 colunas na 1ª linha; bolsos descem alternando
   const cols = 2;
   const cells = [{ key: main.key, col: 1, row: 1, colSpan: 2 }];
-
   let row = 2, col = 1;
   for (const g of rest) {
     cells.push({ key: g.key, col, row });
     col = (col === 1) ? 2 : 1;
     if (col === 1) row++;
   }
-  const rows = Math.max(1, 1 + Math.ceil(rest.length / 2));
+  const rows = Math.max(1, 1 + Math.ceil(rest.length/2));
   return { cols, rows, cells };
 }
 
@@ -152,12 +147,15 @@ function renderContainers(selector, containers){
     title.textContent = `Container: ${cont.slot}`;
     box.appendChild(title);
 
-    const layout = computeAutoLayout(cont.grids || []); // <-- sempre calculado
+    // layout calculado só a partir de cont.grids (sem layout do servidor)
+    const layout = computeAutoLayout(cont.grids || []);
     const gridsWrap = document.createElement('div');
     gridsWrap.className = 'container-layout';
     gridsWrap.style.gridTemplateColumns = `repeat(${layout.cols}, max-content)`;
     gridsWrap.style.gridTemplateRows = `repeat(${layout.rows}, max-content)`;
 
+    // cria todos os holders + inners ANTES de renderGrid
+    const created = new Set();
     for(const cell of layout.cells){
       const holder = document.createElement('div');
       holder.className = 'grid';
@@ -169,14 +167,45 @@ function renderContainers(selector, containers){
       inner.id = `grid-${cont.id}-${cell.key}`;
       holder.appendChild(inner);
       gridsWrap.appendChild(holder);
+      created.add(cell.key);
+    }
 
-      renderGrid(`#${inner.id}`, cont, cell.key);
+    // fallback defensivo: se existir grid no meta mas sem célula criada, cria numa linha extra
+    if (Array.isArray(cont.grids)) {
+      let extraRow = layout.rows + 1, extraCol = 1;
+      for (const g of cont.grids) {
+        if (created.has(g.key)) continue;
+        const holder = document.createElement('div');
+        holder.className = 'grid';
+        holder.style.gridColumn = `${extraCol} / span 1`;
+        holder.style.gridRow    = `${extraRow} / span 1`;
+
+        const inner = document.createElement('div');
+        inner.className = 'grid-inner';
+        inner.id = `grid-${cont.id}-${g.key}`;
+        holder.appendChild(inner);
+        gridsWrap.appendChild(holder);
+
+        extraCol = (extraCol === 1) ? 2 : 1;
+        if (extraCol === 1) extraRow++;
+      }
     }
 
     box.appendChild(gridsWrap);
     wrap.appendChild(box);
+
+    // só aqui chamamos renderGrid, quando TODOS os elementos existem
+    const allKeys = Array.from(created);
+    if (Array.isArray(cont.grids)) {
+      for (const g of cont.grids) if (!created.has(g.key)) allKeys.push(g.key);
+    }
+    for (const key of allKeys) {
+      const sel = `#grid-${cont.id}-${key}`;
+      renderGrid(sel, cont, key);
+    }
   });
 }
+
 
 
 function renderEquip(selector, equip) {
